@@ -100,8 +100,8 @@
     user: root
     job: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ backup_suffix_script_filename }}.sh 2>&1 | /usr/bin/logger -t borgbackup"
     day: "{{ item.day | default('*') }}"
-    hour: "{{ item.hour | default('1') }}"
-    minute: "{{ item.minute | default('0') }}"
+    hour: "{{ item.hour + (item.random_hour | random(seed=backup_suffix_script_filename)) | default('1') }}"
+    minute: "{{ item.minute + (item.random_minute | random(seed=backup_suffix_script_filename)) | default('0') }}"
     state: present
     cron_file: "borgbackup_{{ item.name }}_{{ backup_suffix_script_filename }}"
   with_items: "{{ borgbackup_client_jobs }}"
@@ -122,8 +122,8 @@
     user: root
     job: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ prune_suffix_script_filename }}.sh 2>&1 | /usr/bin/logger -t borgbackup"
     day: "{{ item.day | default('*') }}"
-    hour: "{{ item.hour | default('1') }}"
-    minute: "{{ item.minute | default('0') }}"
+    hour: "{{ item.hour + (item.random_hour | random(seed=prune_suffix_script_filename)) | default('1') }}"
+    minute: "{{ item.minute + (item.random_minute | random(seed=prune_suffix_script_filename)) | default('0') }}"
     state: present
     cron_file: "borgbackup_{{ item.name }}_{{ prune_suffix_script_filename }}"
   with_items: "{{ borgbackup_prune_jobs }}"
