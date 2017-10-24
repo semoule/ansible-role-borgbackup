@@ -80,30 +80,35 @@
   failed_when: (borgbackup_initialize_result.rc != 0) and (borgbackup_initialize_result.stderr != "") and ('already exists' not in borgbackup_initialize_result.stderr)
   when: item.name not in initialized_repos
 
-- name: backup scripts
+- name: generate filename for backup / prune scripts
+  set_fact:
+    backup_suffix_script_filename: "backup_{{ borgbackup_client_backup_server.split('.')[0] }}"
+    prune_suffix_script_filename: "prune_{{ borgbackup_client_backup_server.split('.')[0] }}"
+
+- name: deploy backup scripts
   template:
-    dest: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}.sh"
+    dest: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ backup_suffix_script_filename }}.sh"
     src: job.sh.j2
     owner: root
     group: root
     mode: 0700
   with_items: "{{ borgbackup_client_jobs }}"
 
-- name: backup cronjobs
+- name: schedule backup scripts on cron
   cron:
     name: "borg backup {{ item.name }}"
     user: root
-    job: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}.sh 2>&1 | /usr/bin/logger -t borgbackup"
+    job: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ backup_suffix_script_filename }}.sh 2>&1 | /usr/bin/logger -t borgbackup"
     day: "{{ item.day | default('*') }}"
     hour: "{{ item.hour | default('1') }}"
     minute: "{{ item.minute | default('0') }}"
     state: present
-    cron_file: "borgbackup_backup"
+    cron_file: "borgbackup_{{ item.name }}_{{ backup_suffix_script_filename }}"
   with_items: "{{ borgbackup_client_jobs }}"
 
 - name: deploy prune scripts
   template:
-    dest: "{{ borgbackup_client_scripts_dir }}/prune_{{ item.name }}.sh"
+    dest: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ prune_suffix_script_filename }}.sh"
     src: prune_job.sh.j2
     owner: root
     group: root
@@ -115,11 +120,11 @@
   cron:
     name: "borg prune {{ item.name }}"
     user: root
-    job: "{{ borgbackup_client_scripts_dir }}/prune_{{ item.name }}.sh 2>&1 | /usr/bin/logger -t borgbackup"
+    job: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ prune_suffix_script_filename }}.sh 2>&1 | /usr/bin/logger -t borgbackup"
     day: "{{ item.day | default('*') }}"
     hour: "{{ item.hour | default('1') }}"
     minute: "{{ item.minute | default('0') }}"
     state: present
-    cron_file: "borgbackup_prune"
+    cron_file: "borgbackup_{{ item.name }}_{{ prune_suffix_script_filename }}"
   with_items: "{{ borgbackup_prune_jobs }}"
   when: borgbackup_prune_enabled
