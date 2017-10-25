@@ -52,23 +52,24 @@ borgbackup_client_jobs:
 #  - name: system
 #    options: "--compression zlib,6"
 #    day: "*"
-#    hour: 0
-#    minute: 0
+#    hour: 0                                                     # default value = 1
+#    minute: 0                                                   # default value = 0
+#    random_hour: 5                                              # default value : ignore randomization
+#    random_minute: 59                                           # default value : ignore randomization
 #    directories:
 #      - "/etc/"
 #      - "/home"
 #    excludes: []
-#    random_hour: 5
-#    random_minute: 59
 
+borgbackup_prune_enabled: yes
 #borgbackup_prune_jobs:
 #  - name: system
 #    prune_options: "--keep-daily=7 --keep-weekly=4"
 #    day: "*"
-#    hour: 12
-#    minute: 0
-#    random_hour: 5
-#    random_minute: 59
+#    hour: 12                                                     # default value = 1
+#    minute: 0                                                    # default value = 0
+#    random_hour: 5                                               # default value : ignore randomization
+#    random_minute: 59                                            # default value : ignore randomization
 
 # random_hour : a indempotent random value is computed between 0 and the value specified.
 # Then, the crontab hour will be addition of hour and random_hour.
