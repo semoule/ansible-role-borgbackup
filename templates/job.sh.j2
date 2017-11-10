@@ -7,10 +7,11 @@ export BORG_PASSPHRASE="{{ borgbackup_passphrase }}"
 
 REPOSITORY={{ borgbackup_server_user }}@{{ borgbackup_client_backup_server_lanfreebackup | default(borgbackup_client_backup_server) }}:{{ item.name }}
 
-{{ borgbackup_binary }} create \
+{{ borgbackup_binary }} create --show-rc --verbose --stats \
   {{ item.options | default('--compression zlib,6') }} \
   $REPOSITORY::{{ ansible_hostname }}-$(date +%Y-%m-%d_%H-%M) \
   {{ item.directories | join(' ') }} \
   {% for e in item.excludes %}
   --exclude '{{ e }}' \
   {% endfor %}
+  2>&1 | /usr/bin/logger -t borgbackup_backup_{{ item.name }}_{{ borgbackup_client_backup_server }}

@@ -7,6 +7,7 @@ export BORG_PASSPHRASE="{{ borgbackup_passphrase }}"
 
 REPOSITORY={{ borgbackup_server_user }}@{{ borgbackup_client_backup_server_lanfreebackup | default(borgbackup_client_backup_server) }}:{{ item.name }}
 
-{{ borgbackup_binary }} prune \
+{{ borgbackup_binary }} prune --show-rc --verbose --stats \
   {{ item.prune_options }} \
-  $REPOSITORY
+  $REPOSITORY \
+  2>&1 | /usr/bin/logger -t borgbackup_prune_{{ item.name }}_{{ borgbackup_client_backup_server }}
