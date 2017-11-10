@@ -75,7 +75,20 @@ borgbackup_prune_enabled: yes
 #    random_hour: 5                                               # default value : ignore randomization
 #    random_minute: 59                                            # default value : ignore randomization
 
-# random_hour : a indempotent random value is computed between 0 and the value specified.
-# Then, the crontab hour will be addition of hour and random_hour.
-# random_minute has same behaviour.
+borgbackup_check_enabled: yes
+#borgbackup_check_jobs:
+#  - name: system
+#    check_options: "--verbose"
+#    day: 1
+#    hour: 12                                                     # default value = 1
+#    minute: 0                                                    # default value = 0
+#    random_hour: 5                                               # default value : ignore randomization
+#    random_minute: 59                                            # default value : ignore randomization
+#    random_day: 27                                               # default value : ignore randomization
+
+# about random :
 # purpose is to set indempotent random crontab values that differs when many jobs are croned.
+# random_hour : if defined, a indempotent random value is computed between 0 and the value specified.
+# Then, the crontab hour will be addition of hour and random_hour.
+# a modulo 24 is applied in order to ensure valid hour are specified.
+# random_minute and random_day works the same way.

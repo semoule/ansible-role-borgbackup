@@ -80,12 +80,15 @@
   failed_when: (borgbackup_initialize_result.rc != 0) and (borgbackup_initialize_result.stderr != "") and ('already exists' not in borgbackup_initialize_result.stderr)
   when: item.name not in initialized_repos
 
-- name: generate filename for backup / prune scripts
+- name: generate filename for backup / prune / check scripts
   set_fact:
     backup_suffix_script_filename: "backup_{{ borgbackup_client_backup_server.split('.')[0] }}"
     prune_suffix_script_filename: "prune_{{ borgbackup_client_backup_server.split('.')[0] }}"
+    check_suffix_script_filename: "check_{{ borgbackup_client_backup_server.split('.')[0] }}"
 
-
+#
+# backup scripts
+#
 - name: deploy backup scripts
   template:
     dest: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ backup_suffix_script_filename }}.sh"
@@ -107,6 +110,9 @@
     cron_file: "borgbackup_{{ item.name }}_{{ backup_suffix_script_filename }}"
   with_items: "{{ borgbackup_client_jobs }}"
 
+#
+# prune scripts
+#
 - name: deploy prune scripts
   template:
     dest: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ prune_suffix_script_filename }}.sh"
@@ -129,3 +135,29 @@
     cron_file: "borgbackup_{{ item.name }}_{{ prune_suffix_script_filename }}"
   with_items: "{{ borgbackup_prune_jobs }}"
   when: borgbackup_prune_enabled
+
+#
+# check repository scripts
+#
+- name: deploy check scripts
+  template:
+    dest: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ check_suffix_script_filename }}.sh"
+    src: check_job.sh.j2
+    owner: root
+    group: root
+    mode: 0700
+  with_items: "{{ borgbackup_check_jobs }}"
+  when: borgbackup_check_enabled
+
+- name: schedule check scripts on cron
+  cron:
+    name: "borg check {{ item.name }}"
+    user: root
+    job: "{{ borgbackup_client_scripts_dir }}/{{ item.name }}_{{ check_suffix_script_filename }}.sh 2>&1 | /usr/bin/logger -t borgbackup"
+    day: "{{ (item.day | default(1)) + (item.random_day | random(seed=item.name + check_suffix_script_filename + ansible_host))%28 if item.random_day is defined else item.day | default(1) }}"
+    hour: "{{ (item.hour | default(1)) + (item.random_hour | random(seed=item.name + check_suffix_script_filename + ansible_host))%24 if item.random_hour is defined else item.hour | default(1) }}"
+    minute: "{{ (item.minute | default(0)) + (item.random_minute | random(seed=ansible_host + item.name + check_suffix_script_filename))%60 if item.random_minute is defined else item.minute | default(0) }}"
+    state: present
+    cron_file: "borgbackup_{{ item.name }}_{{ check_suffix_script_filename }}"
+  with_items: "{{ borgbackup_check_jobs }}"
+  when: borgbackup_check_enabled
