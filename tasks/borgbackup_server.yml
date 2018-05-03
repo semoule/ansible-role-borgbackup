@@ -1,5 +1,9 @@
 ---
 
+#
+# server installation task
+#
+
 - name: create group for borg
   group:
     name: "{{ borgbackup_server_group }}"
@@ -32,3 +36,9 @@
     group: "{{ borgbackup_server_group }}"
     mode: 0600
     state: touch
+
+- name: add ssh-pubkey admin users to backup server
+  authorized_key:
+    user: "{{ borgbackup_server_user }}"
+    key: "{{ item }}"
+  with_items: "{{ borgbackup_server_admins }}"

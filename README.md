@@ -22,7 +22,7 @@ Example Playbook
         - role: SphericalElephant.borgbackup
           borgbackup_client: True
           borgbackup_client_backup_server: backup01.example.com
-          borgbackup_client_jobs:
+          borgbackup_create_jobs:
             - name: system
               day: "*"
               hour: "0"

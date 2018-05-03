@@ -10,4 +10,5 @@ REPOSITORY={{ borgbackup_server_user }}@{{ borgbackup_client_backup_server_lanfr
 {{ borgbackup_binary }} check --show-rc --verbose \
   {{ item.check_options }} \
   $REPOSITORY \
-  2>&1 | /usr/bin/logger -t borgbackup_check_{{ item.name }}_{{ borgbackup_client_backup_server }}
+  2>&1 | tee {{ borgbackup_client_lastlog_dir }}/{{ item.name }}_{{ check_suffix_script_filename }}.lastlog \
+  | /usr/bin/logger -t borgbackup_check_{{ item.name }}_{{ borgbackup_client_backup_server }}
