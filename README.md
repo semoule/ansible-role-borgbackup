@@ -40,6 +40,13 @@ Example Playbook
               day: "*"
               hour: "8"
               minute: "0"
+          borgbackup_check_jobs:
+            - name: system
+              check_options: "--lock-wait 28800"
+              day: "1"
+              hour: "12"
+              minute: "0"
+
 
 You can easily assign client and server attributes from your inventory with something similar to the following:
 

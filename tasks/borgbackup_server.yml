@@ -40,5 +40,7 @@
 - name: add ssh-pubkey admin users to backup server
   authorized_key:
     user: "{{ borgbackup_server_user }}"
-    key: "{{ item }}"
+    key: "{{ item.key }}"
+    state: "{{ item.state | default('present') }}"
   with_items: "{{ borgbackup_server_admins }}"
+
