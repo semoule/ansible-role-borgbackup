@@ -5,7 +5,7 @@
 ##
 borgbackup_install_from_binary: True
 borgbackup_install_from_repo: False
-borgbackup_binary_version: "1.1.4"
+borgbackup_binary_version: "1.1.7"
 borgbackup_binary_platform: "borg-linux64"
 borgbackup_binary_uri: "https://github.com/borgbackup/borg/releases/download/{{ borgbackup_binary_version }}/{{ borgbackup_binary_platform }}"
 borgbackup_binary: "/usr/local/bin/borg"
@@ -57,6 +57,12 @@ borgbackup_client_backup_server:
 
 # if defined, IP or FQDN used on backup operation. Usefull in case of LAN-free backup
 #borgbackup_client_backup_server_lanfreebackup:
+
+# max retry attempt on create/prune/check task failure. only one attempt if unset.
+#borgbackup_task_retry: 3
+
+# retry attempt wait time 
+#borgbackup_task_retry_wait: 30
 
 # you have to set at least a "create" job.
 # "prune" and "checks" jobs are optionnal, but you should use it too.

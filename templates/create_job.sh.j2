@@ -4,15 +4,22 @@ set -e
 
 export BORG_RSH="ssh -i {{ borgbackup_client_ssh_key_file }}"
 export BORG_PASSPHRASE="{{ borgbackup_passphrase }}"
+export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
 
 REPOSITORY={{ borgbackup_server_user }}@{{ borgbackup_client_backup_server_lanfreebackup | default(borgbackup_client_backup_server) }}:{{ item.name }}
 
-{{ borgbackup_binary }} create --show-rc --verbose --stats \
-  {{ item.options | default('--compression zlib,6') }} \
-  $REPOSITORY::{{ ansible_hostname }}-$(date +%Y-%m-%d_%H-%M) \
-  {{ item.directories | join(' ') }} \
-  {% for e in item.excludes %}
-  --exclude '{{ e }}' \
-  {% endfor %}
-  2>&1 | tee {{ borgbackup_client_lastlog_dir }}/{{ item.name }}_{{ create_suffix_script_filename }}.lastlog \
-  | /usr/bin/logger -t borgbackup_backup_{{ item.name }}_{{ borgbackup_client_backup_server }}
+retry={{ borgbackup_task_retry | default(1) }}
+step_status=0
+while [ $retry -gt 0 ]; do
+  {{ borgbackup_binary }} create --show-rc --verbose --stats \
+    {{ item.options | default('--compression zlib,6') }} \
+    $REPOSITORY::{{ ansible_hostname }}-$(date +%Y-%m-%d_%H-%M) \
+    {{ item.directories | join(' ') }} \
+    {% for e in item.excludes %}
+    --exclude '{{ e }}' \
+    {% endfor %}
+    2>&1 | tee {{ borgbackup_client_lastlog_dir }}/{{ item.name }}_{{ create_suffix_script_filename }}.lastlog \
+    | /usr/bin/logger -t borgbackup_backup_{{ item.name }}_{{ borgbackup_client_backup_server }}
+  for i in ${PIPESTATUS[@]}; do let step_status+=$i ;done
+  if [ $step_status -eq 0 ]; then retry=0; else sleep {{ borgbackup_task_retry_wait | default(30) }}; let retry-=1; fi
+done
